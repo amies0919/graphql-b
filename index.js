@@ -10,6 +10,7 @@ const typeDefs = `
         name: String!
         description: String
         category: PhotoCategory!
+        postedBy: User!
     }
     input PostPhotoInput {
         name: String!
@@ -23,9 +24,37 @@ const typeDefs = `
     type Mutation {
         postPhoto(input: PostPhotoInput!): Photo!
     }
+    type User {
+        githubLogin: ID!
+        name: String
+        avatar: String
+        postedPhotos: [Photo!]!
+    }
 `
 var _id = 0
-var photos = []
+var photos = [
+    {
+        "id": "0",
+        "name": "vvvvv3",
+        "description": "bbbbbbbddddvvvvvv",
+        "url": "http://test.com/img/0.jpg",
+        "category": "PORTRART",
+        "githubUser":"user1"
+    },
+    {
+        "id": "1",
+        "name": "vvvvv3",
+        "description": "bbbbbbbddddvvvvvv",
+        "url": "http://test.com/img/1.jpg",
+        "category": "PORTRART",
+        "githubUser": "user2"
+    }
+]
+var users = [
+    {"githubLogin":"mHattrup","name":"Mike Hattrup"},
+    { "githubLogin": "user1", "name": "Mike 2" },
+    { "githubLogin": "user2", "name": "Mike 3" }
+]
 const resolvers = {
     Query: {
         totalPhotos: ()=> photos.length,
@@ -42,7 +71,15 @@ const resolvers = {
         }
     },
     Photo: {
-        url: parent=> `http://test.com/img/${parent.id}.jpg`
+        url: parent=> `http://test.com/img/${parent.id}.jpg`,
+        postedBy: parent=> {
+            return users.find(u => u.githubLogin === parent.githubUser)
+        }
+    },
+    User: {
+        postedPhotos: parent => {
+            return photos.filter(p=> p.githubUser === parent.githubLogin)
+        }
     }
 }
 const server = new ApolloServer({
