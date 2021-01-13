@@ -3,57 +3,8 @@ const express = require('express')
 const expressPlayground = require('graphql-playground-middleware-express').default
 const { readFileSync } = require('fs')
 const typeDefs = readFileSync('./typeDefs.graphql','utf8')
-var _id = 0
-var photos = [
-    {
-        "id": "0",
-        "name": "vvvvv3",
-        "description": "bbbbbbbddddvvvvvv",
-        "url": "http://test.com/img/0.jpg",
-        "category": "PORTRART",
-        "githubUser":"user1"
-    },
-    {
-        "id": "1",
-        "name": "vvvvv3",
-        "description": "bbbbbbbddddvvvvvv",
-        "url": "http://test.com/img/1.jpg",
-        "category": "PORTRART",
-        "githubUser": "user2"
-    }
-]
-var users = [
-    {"githubLogin":"mHattrup","name":"Mike Hattrup"},
-    { "githubLogin": "user1", "name": "Mike 2" },
-    { "githubLogin": "user2", "name": "Mike 3" }
-]
-const resolvers = {
-    Query: {
-        totalPhotos: ()=> photos.length,
-        allPhotos: ()=> photos
-    },
-    Mutation: {
-        postPhoto(parent, args) {
-            var newPhoto = {
-                id: _id++,
-                ...args.input
-            }
-            photos.push(newPhoto)
-            return newPhoto
-        }
-    },
-    Photo: {
-        url: parent=> `http://test.com/img/${parent.id}.jpg`,
-        postedBy: parent=> {
-            return users.find(u => u.githubLogin === parent.githubUser)
-        }
-    },
-    User: {
-        postedPhotos: parent => {
-            return photos.filter(p=> p.githubUser === parent.githubLogin)
-        }
-    }
-}
+const resolvers = require('./resolvers')
+
 const app = express()
 const server = new ApolloServer({
     typeDefs,
