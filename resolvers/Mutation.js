@@ -27,7 +27,7 @@ const githubAuth = async (parent, { code }, { db })=>{
     let latestUserInfo = {
         name,
         githubLogin: login,
-        gitHubToken: access_token,
+        githubToken: access_token,
         avatar: avatar_url
     }
     const { ops:[user] } = await db

@@ -13,12 +13,17 @@ async function start() {
     const DB_HOST = process.env.DB_HOST
     const client = await MongoClient.connect(DB_HOST, {useNewUrlParser:true})
     const db = client.db()
-    const context = { db }
+    // const context = { db }
 
     const server = new ApolloServer({
         typeDefs,
         resolvers,
-        context
+        context: async ({ req }) => {
+            const githubToken = req.headers.authorization
+            const currentUser = await db.collection('users').findOne({ githubToken }) 
+            console.log(currentUser)
+            return { db, currentUser }
+        }
     })
     server.applyMiddleware({ app })
     app.get('/', (req, res) => res.send('Welcome to the photoShare API'))
