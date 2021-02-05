@@ -1,12 +1,16 @@
 const { authorizeWithGithub } = require('../util.js')
-var _id = 0
-var { photos } = require('./mock')
-const postPhoto = (parent, args) =>{
-    var newPhoto = {
-        id: _id++,
-        ...args.input
+const postPhoto = async (parent, args,{ db, currentUser }) =>{
+    if( !currentUser ){
+        throw new Error('only an authorized user can post a photo')
     }
-    photos.push(newPhoto)
+    var newPhoto = {
+        ...args.input,
+        userID: currentUser.githubLogin,
+        created: new Date()
+    }
+    const { insertedIds } = await db.collection('photos').insert(newPhoto)
+    console.log(insertedIds)
+    newPhoto.id = insertedIds[0]
     return newPhoto
 }
 const githubAuth = async (parent, { code }, { db })=>{
