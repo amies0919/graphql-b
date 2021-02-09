@@ -15,7 +15,7 @@ const postPhoto = async (parent, args,{ db, currentUser, pubsub }) =>{
     pubsub.publish('photo-added', { newPhoto })
     return newPhoto
 }
-const githubAuth = async (parent, { code }, { db })=>{
+const githubAuth = async (parent, { code }, { db, pubsub })=>{
     let {
         message,
         access_token,
@@ -39,10 +39,11 @@ const githubAuth = async (parent, { code }, { db })=>{
     const { ops:[user] } = await db
         .collection('users')
         .replaceOne({ githubLogin: login }, latestUserInfo, { upsert: true })
+        pubsub.publish('user-added', { newUser: user })
     return { user, token: access_token }
 
 }
-const addFakeUsers = async (root, {count} , {db}) => {
+const addFakeUsers = async (root, {count} , {db, pubsub}) => {
     var randomUserApi = `http://randomuser.me/api/?results=${count}`
     var {results} = await fetch(randomUserApi).then(res=>res.json())
     var users = results.map(r=>({
@@ -53,6 +54,13 @@ const addFakeUsers = async (root, {count} , {db}) => {
 
     }))
     await db.collection('users').insert(users)
+
+    let newUsers = await db.collection('users')
+    .find()
+    .sort({ _id: -1 })
+    .limit(count)
+    .toArray()
+    newUsers.forEach(newUser=>pubsub.publish('user-added', { newUser }))
     return users
 }
 
