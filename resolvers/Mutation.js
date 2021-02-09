@@ -1,5 +1,6 @@
 const { authorizeWithGithub } = require('../util.js')
-const postPhoto = async (parent, args,{ db, currentUser }) =>{
+const fetch = require('node-fetch')
+const postPhoto = async (parent, args,{ db, currentUser, pubsub }) =>{
     if( !currentUser ){
         throw new Error('only an authorized user can post a photo')
     }
@@ -11,6 +12,7 @@ const postPhoto = async (parent, args,{ db, currentUser }) =>{
     const { insertedIds } = await db.collection('photos').insert(newPhoto)
     console.log(insertedIds)
     newPhoto.id = insertedIds[0]
+    pubsub.publish('photo-added', { newPhoto })
     return newPhoto
 }
 const githubAuth = async (parent, { code }, { db })=>{
@@ -40,8 +42,23 @@ const githubAuth = async (parent, { code }, { db })=>{
     return { user, token: access_token }
 
 }
+const addFakeUsers = async (root, {count} , {db}) => {
+    var randomUserApi = `http://randomuser.me/api/?results=${count}`
+    var {results} = await fetch(randomUserApi).then(res=>res.json())
+    var users = results.map(r=>({
+        githubLogin: r.login.username,
+        name:`${r.name.first} ${r.name.last}`,
+        avatar: r.picture.thumbnail,
+        githubToken: r.login.sha1
+
+    }))
+    await db.collection('users').insert(users)
+    return users
+}
+
 module.exports = {
     postPhoto,
-    githubAuth
-
+    githubAuth,
+    addFakeUsers
+    
 }
