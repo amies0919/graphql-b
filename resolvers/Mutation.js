@@ -1,5 +1,7 @@
-const { authorizeWithGithub } = require('../util.js')
+const { authorizeWithGithub , uploadStream } = require('../util.js')
 const fetch = require('node-fetch')
+const {OnjectID} = require("mongodb")
+const path = require("path")
 const postPhoto = async (parent, args,{ db, currentUser, pubsub }) =>{
     if( !currentUser ){
         throw new Error('only an authorized user can post a photo')
@@ -9,9 +11,14 @@ const postPhoto = async (parent, args,{ db, currentUser, pubsub }) =>{
         userID: currentUser.githubLogin,
         created: new Date()
     }
-    const { insertedIds } = await db.collection('photos').insert(newPhoto)
-    console.log(insertedIds)
-    newPhoto.id = insertedIds[0]
+    const {insertedId} = await db.collection('photos').insertOne(newPhoto)
+    newPhoto.id = insertedId
+
+    var toPath = path.join(__dirname, '..','assets','photos',`${newPhoto.id}.jpg`)
+    const { createReadStream } = await args.input.file
+    let stream = createReadStream()
+    await uploadStream(stream, toPath)
+
     pubsub.publish('photo-added', { newPhoto })
     return newPhoto
 }
