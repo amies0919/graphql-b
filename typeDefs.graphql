@@ -2,6 +2,7 @@ enum PhotoCategory{
     SELFIE
     PORTRART
 }
+
 type Photo {
     id: ID!
     url: String!
@@ -11,10 +12,12 @@ type Photo {
     postedBy: User!
     taggedUsers: [User!]!
 }
+
 input PostPhotoInput {
     name: String!
     category: PhotoCategory=PORTRART
     description: String
+    file: Upload!
 }
 type Query {
     me: User,
@@ -43,4 +46,6 @@ type AuthPayload {
     token: String!
     user: User!
 }
+
+
 
